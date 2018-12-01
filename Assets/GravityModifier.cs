@@ -11,14 +11,18 @@ public class GravityModifier : MonoBehaviour
     public float maxSpeed = 5f;
     public float acceleration = 3f;
     public float breakMultiplier = 5f;
+    public float terminalVelocity = 30f;
+    public float fallMultiplier = 2f;
 
     private bool grounded = false;
     private Vector2 groundNormal;
     private Rigidbody2D rb2d;
     private Vector2 direction;
     private Vector2 targetDirection;
-    private float moveVelocity = 0;
-    private float wallLimit = 1;
+    private Vector2 fallVelocity = Vector2.zero;
+    private Vector2 moveVelocity = Vector2.zero;
+    private bool jumping = true;
+    private float gravityMultiplier = 2f;
 
     private void Start()
     {
@@ -40,31 +44,48 @@ public class GravityModifier : MonoBehaviour
         Physics2D.gravity = direction;
 
         Vector2 gDir = Physics2D.gravity.normalized;
+        Vector2 gTan = new Vector2(-gDir.y, gDir.x);
         rb2d.velocity = gDir * Vector2.Dot(gDir, rb2d.velocity);
 
-        if (Input.GetButton("Jump") && grounded)
+        float fallT = fallVelocity.magnitude / terminalVelocity;
+        fallT = fallT * fallT * fallT * fallT;
+        Vector2 fallDelta = Vector2.Lerp(gDir * 9.8f * gravityMultiplier * Time.deltaTime, Vector2.zero, fallT);
+
+        if (Input.GetButtonDown("Jump"))
         {
-            rb2d.velocity += groundNormal * jumpForce;
-            grounded = false;
+            if (grounded)
+            {
+                gravityMultiplier = 1;
+                jumping = true;
+                fallVelocity = -gDir * jumpForce;
+                grounded = false;
+            }
+        }
+        else if (jumping && Input.GetButtonUp("Jump"))
+        {
+            jumping = false;
         }
 
-        float speedDelta = Input.GetAxis("Horizontal") * acceleration;
-        if (!grounded)
+        if (jumping == false || Vector2.Dot(gDir, fallVelocity) > 0)
         {
-            speedDelta *= airControl;
-        }
-        if (grounded && speedDelta * moveVelocity < 0)
-        {
-            speedDelta *= breakMultiplier;
-        }
-        speedDelta *= Time.deltaTime;
-        moveVelocity = Mathf.Clamp(moveVelocity + speedDelta, -maxSpeed, maxSpeed);
-        if (!Input.GetButton("Horizontal"))
-        {
-            moveVelocity = Mathf.Lerp(moveVelocity, 0, Mathf.Abs(Input.GetAxis("Horizontal")));
+            jumping = false;
+            gravityMultiplier = fallMultiplier;
         }
 
-        rb2d.velocity += new Vector2(-gDir.y * moveVelocity, gDir.x * moveVelocity);
+        fallVelocity += fallDelta;
+
+        float speed = Input.GetAxis("Horizontal") * maxSpeed;
+        if (grounded)
+        {
+            moveVelocity = new Vector2(groundNormal.y * speed, -groundNormal.x * speed);
+        }
+        else
+        {
+            Vector2 airVelocity = gTan * speed;
+            moveVelocity = Vector2.Lerp(moveVelocity, airVelocity, airControl);
+        }
+
+        rb2d.velocity = fallVelocity + moveVelocity;
 	}
     
     private void OnCollisionExit2D(Collision2D collision)
@@ -79,10 +100,10 @@ public class GravityModifier : MonoBehaviour
         Vector3 gravDir = Physics2D.gravity.normalized;
         Vector2 bestGroundNormal = Vector2.zero;
         float maxGroundSlope = -1;
-        wallLimit = 1;
         for (int i = 0; i < collision.contactCount; i++)
         {
             Vector2 normal = collision.contacts[i].normal;
+            Vector2 nrmTan = new Vector2(normal.y, -normal.x);
             float slope = -Vector2.Dot(normal, gravDir);
             if (slope > minSlope)
             {
@@ -93,14 +114,13 @@ public class GravityModifier : MonoBehaviour
                 }
                 grounded = true;
             }
-            else
-            {
-                slope = Vector2.Dot(normal, new Vector2(-gravDir.y, gravDir.x) * Mathf.Sign(moveVelocity));
-                if (slope < wallLimit)
-                {
-                    wallLimit = slope;
-                }
-            }
+            Debug.DrawRay(transform.position, fallVelocity, Color.red);
+            fallVelocity = HandleCollision(fallVelocity, normal);
+            Debug.DrawRay(transform.position, fallVelocity, Color.magenta);
+
+            Debug.DrawRay(transform.position, moveVelocity, Color.blue);
+            moveVelocity = HandleCollision(moveVelocity, normal);
+            Debug.DrawRay(transform.position, moveVelocity, Color.cyan);
         }
         if (grounded)
         {
@@ -108,39 +128,54 @@ public class GravityModifier : MonoBehaviour
         }
     }
 
-#if UNITY_EDITOR
-    private void OnDrawGizmos()
+    private Vector2 HandleCollision(Vector2 velocity, Vector2 normal)
     {
-        if (Application.isPlaying)
+        if (Vector2.Dot(velocity, normal) < 0)
         {
-            Vector3 mouse = Input.mousePosition;
-            Vector3 mwrld = Camera.main.ScreenToWorldPoint(new Vector3(mouse.x, mouse.y, target.position.z - Camera.main.transform.position.z));
-            Gizmos.color = Color.green;
-            Gizmos.DrawRay(target.position, -Physics2D.gravity / 9.8f);
-            Vector2 hrz = new Vector2(-Physics2D.gravity.y, Physics2D.gravity.x) / 9.8f;
-            Gizmos.color = Color.red;
-            Gizmos.DrawRay(target.position, hrz);
-
-            Vector2 p1 = new Vector2(0, 0);
-            Vector2 p2 = Physics.gravity;
-            Vector2 p3 = rb2d.velocity;
-            Vector2 p4 = new Vector2(-p2.y, p2.x);
-            float q1 = (p1.x * p2.y - p1.y * p2.x);
-            float q2 = (p3.x * p4.y - p3.y * p4.x);
-            float d = (p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x);
-            Vector2 p = new Vector2(
-                (q1*(p3.x-p4.x)-(p1.x-p2.x)*q2)/d,
-                (q1*(p3.y-p4.y)-(p1.y-p2.y)*q2)/d);
-
-            p = Physics2D.gravity.normalized * Vector2.Dot(Physics2D.gravity.normalized, rb2d.velocity);
-
-            Gizmos.color = new Color(0, 0, 1, 0.5f);
-            Gizmos.DrawRay(target.position, p);
-            Gizmos.color = Color.white;
-            Gizmos.DrawRay(target.position, rb2d.velocity);
-            Gizmos.color = Color.white;
-            Gizmos.DrawLine((Vector2)target.position + p, (Vector2)target.position + rb2d.velocity);
+            return velocity * Mathf.Sqrt(1f - Mathf.Pow(Vector2.Dot(velocity.normalized, normal), 2));
         }
+        return velocity;
     }
-#endif
+
+//#if UNITY_EDITOR
+//    private void OnDrawGizmos()
+//    {
+//        if (Application.isPlaying)
+//        {
+//            Vector3 mouse = Input.mousePosition;
+//            Vector3 mwrld = Camera.main.ScreenToWorldPoint(new Vector3(mouse.x, mouse.y, target.position.z - Camera.main.transform.position.z));
+//            Gizmos.color = Color.green;
+//            Gizmos.DrawRay(target.position, -Physics2D.gravity / 9.8f);
+//            Vector2 hrz = new Vector2(-Physics2D.gravity.y, Physics2D.gravity.x) / 9.8f;
+//            Gizmos.color = Color.red;
+//            Gizmos.DrawRay(target.position, hrz);
+
+//            Vector2 p1 = new Vector2(0, 0);
+//            Vector2 p2 = Physics.gravity;
+//            Vector2 p3 = rb2d.velocity;
+//            Vector2 p4 = new Vector2(-p2.y, p2.x);
+//            float q1 = (p1.x * p2.y - p1.y * p2.x);
+//            float q2 = (p3.x * p4.y - p3.y * p4.x);
+//            float d = (p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x);
+//            Vector2 p = new Vector2(
+//                (q1*(p3.x-p4.x)-(p1.x-p2.x)*q2)/d,
+//                (q1*(p3.y-p4.y)-(p1.y-p2.y)*q2)/d);
+
+//            p = Physics2D.gravity.normalized * Vector2.Dot(Physics2D.gravity.normalized, rb2d.velocity);
+
+//            Gizmos.color = new Color(0, 0, 1, 0.5f);
+//            Gizmos.DrawRay(target.position, p);
+//            Gizmos.color = Color.white;
+//            Gizmos.DrawRay(target.position, rb2d.velocity);
+//            Gizmos.color = Color.white;
+//            Gizmos.DrawLine((Vector2)target.position + p, (Vector2)target.position + rb2d.velocity);
+
+//            if (grounded)
+//            {
+//                Gizmos.color = Color.yellow;
+//                Gizmos.DrawRay(target.position, new Vector2(groundNormal.y, -groundNormal.x));
+//            }
+//        }
+//    }
+//#endif
 }
