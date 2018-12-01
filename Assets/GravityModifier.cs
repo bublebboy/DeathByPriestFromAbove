@@ -1,9 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Animations;
 using UnityEngine;
 
 public class GravityModifier : MonoBehaviour
 {
+    private static int IS_WALKING = Animator.StringToHash("IsWalking");
+
     public Transform target;
     public float jumpForce = 20f;
     public float minSlope = 0.65f;
@@ -13,6 +16,8 @@ public class GravityModifier : MonoBehaviour
     public float breakMultiplier = 5f;
     public float terminalVelocity = 30f;
     public float fallMultiplier = 2f;
+    public Animator animator;
+    public SpriteRenderer spriteRenderer;
 
     private bool grounded = false;
     private Vector2 groundNormal;
@@ -42,6 +47,8 @@ public class GravityModifier : MonoBehaviour
 
         direction = Vector2.Lerp(direction, targetDirection, 0.05f);
         Physics2D.gravity = direction;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        transform.localRotation = Quaternion.Euler(0, 0, angle + 90f);
 
         Vector2 gDir = Physics2D.gravity.normalized;
         Vector2 gTan = new Vector2(-gDir.y, gDir.x);
@@ -86,6 +93,10 @@ public class GravityModifier : MonoBehaviour
         }
 
         rb2d.velocity = fallVelocity + moveVelocity;
+
+        bool isWalking = grounded && Mathf.Abs(speed) > 0.1f;
+        spriteRenderer.flipX = speed < 0;
+        animator.SetBool(IS_WALKING, isWalking);
 	}
     
     private void OnCollisionExit2D(Collision2D collision)
