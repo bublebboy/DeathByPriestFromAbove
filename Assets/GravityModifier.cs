@@ -18,6 +18,7 @@ public class GravityModifier : MonoBehaviour
     private Vector2 direction;
     private Vector2 targetDirection;
     private float moveVelocity = 0;
+    private float wallLimit = 1;
 
     private void Start()
     {
@@ -65,29 +66,45 @@ public class GravityModifier : MonoBehaviour
 
         rb2d.velocity += new Vector2(-gDir.y * moveVelocity, gDir.x * moveVelocity);
 	}
+    
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.contactCount == 0)
+            grounded = false;
+    }
 
     private void OnCollisionStay2D(Collision2D collision)
     {
         grounded = false;
         Vector3 gravDir = Physics2D.gravity.normalized;
         Vector2 bestGroundNormal = Vector2.zero;
-        float maxSlope = -1;
+        float maxGroundSlope = -1;
+        wallLimit = 1;
         for (int i = 0; i < collision.contactCount; i++)
         {
-            float slope = -Vector2.Dot(collision.contacts[i].normal, gravDir);
+            Vector2 normal = collision.contacts[i].normal;
+            float slope = -Vector2.Dot(normal, gravDir);
             if (slope > minSlope)
             {
-                if (slope > maxSlope)
+                if (slope > maxGroundSlope)
                 {
-                    maxSlope = slope;
-                    bestGroundNormal = collision.contacts[i].normal;
+                    maxGroundSlope = slope;
+                    bestGroundNormal = normal;
                 }
                 grounded = true;
+            }
+            else
+            {
+                slope = Vector2.Dot(normal, new Vector2(-gravDir.y, gravDir.x) * Mathf.Sign(moveVelocity));
+                if (slope < wallLimit)
+                {
+                    wallLimit = slope;
+                }
             }
         }
         if (grounded)
         {
-            groundNormal = bestGroundNormal * maxSlope;
+            groundNormal = bestGroundNormal * maxGroundSlope;
         }
     }
 
