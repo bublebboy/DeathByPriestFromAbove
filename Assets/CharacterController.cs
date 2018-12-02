@@ -27,6 +27,16 @@ public class CharacterController : MonoBehaviour
     private float gravityMultiplier = 2f;
     private float horizontalMovement = 0;
 
+    public bool Grounded
+    {
+        get { return grounded; }
+    }
+
+    public Vector2 GroundNormal
+    {
+        get { return groundNormal; }
+    }
+
     private void Start()
     {
         rb2d = GetComponent<Rigidbody2D>();
@@ -54,14 +64,13 @@ public class CharacterController : MonoBehaviour
         jumping = false;
     }
 
-    void Update () {
+    void FixedUpdate () {
         Vector2 gDir = Physics2D.gravity.normalized;
         Vector2 gTan = new Vector2(-gDir.y, gDir.x);
-        rb2d.velocity = gDir * Vector2.Dot(gDir, rb2d.velocity);
 
         float fallT = fallVelocity.magnitude / terminalVelocity;
         fallT = fallT * fallT * fallT * fallT;
-        Vector2 fallDelta = Vector2.Lerp(gDir * 9.8f * gravityMultiplier * Time.deltaTime, Vector2.zero, fallT);
+        Vector2 fallDelta = Vector2.Lerp(gDir * 9.8f * gravityMultiplier * Time.fixedDeltaTime, Vector2.zero, fallT);
 
         if (jumping == false || Vector2.Dot(gDir, fallVelocity) > 0)
         {
