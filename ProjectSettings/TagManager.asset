@@ -14,10 +14,10 @@ TagManager:
   - 
   - 
   - PostProcessing
-  - 
-  - 
-  - 
-  - 
+  - Enemies
+  - Player
+  - Utility
+  - Ground
   - 
   - 
   - 

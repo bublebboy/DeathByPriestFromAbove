@@ -6,6 +6,7 @@ using UnityEngine;
 public class CharacterController : MonoBehaviour
 {
     private static int IS_WALKING = Animator.StringToHash("IsWalking");
+    private static int IS_FALLING = Animator.StringToHash("IsFalling");
 
     public float jumpForce = 20f;
     public float minSlope = 0.65f;
@@ -96,6 +97,7 @@ public class CharacterController : MonoBehaviour
         bool isWalking = grounded && Mathf.Abs(speed) > 0.1f;
         spriteRenderer.flipX = speed < 0;
         animator.SetBool(IS_WALKING, isWalking);
+        animator.SetBool(IS_FALLING, !grounded);
 	}
     
     private void OnCollisionExit2D(Collision2D collision)
