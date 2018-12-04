@@ -44,7 +44,8 @@ GameObject:
   - component: {fileID: 4428470304032518}
   - component: {fileID: 212218886135119984}
   - component: {fileID: 114275550957698618}
-  m_Layer: 10
+  - component: {fileID: 61366541688339562}
+  m_Layer: 13
   m_Name: Sword
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -58,7 +59,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1243421766247552}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 14, z: 0}
+  m_LocalPosition: {x: 39.5, y: 41.7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4428470304032518}
@@ -98,6 +99,31 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
+--- !u!61 &61366541688339562
+BoxCollider2D:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1263000422557124}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.011652634, y: -0.7047528}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 1}
+    oldSize: {x: 1, y: 1}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.2375795, y: 0.6570742}
+  m_EdgeRadius: 0
 --- !u!70 &70106696736501474
 CapsuleCollider2D:
   m_ObjectHideFlags: 1
@@ -111,7 +137,7 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0.0050520897}
-  m_Size: {x: 0.58, y: 1.0188494}
+  m_Size: {x: 0.58, y: 0.98}
   m_Direction: 0
 --- !u!95 &95039509628586340
 Animator:
@@ -142,14 +168,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 425c423940eb6e9499b1cf080b41995a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  jumpForce: 8
+  jumpForce: 10
   minSlope: 0.65
   airControl: 0.05
   maxSpeed: 5
   acceleration: 20
   breakMultiplier: 5
   terminalVelocity: 25
-  fallMultiplier: 2
+  fallMultiplier: 3
   animator: {fileID: 95039509628586340}
   spriteRenderer: {fileID: 212859784805138578}
 --- !u!114 &114229658909204168
@@ -205,6 +231,8 @@ MonoBehaviour:
   SetGravityButton: Fire2
   characterController: {fileID: 114017317593322748}
   gravityModifier: {fileID: 114297967731794264}
+  life: 3
+  invulnerabilityTime: 1.25
 --- !u!212 &212218886135119984
 SpriteRenderer:
   m_ObjectHideFlags: 1
@@ -239,7 +267,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 6
   m_Sprite: {fileID: 21300000, guid: 9d4b8318739048543af8b26ea83752fa, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -285,7 +313,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_Sprite: {fileID: 21300000, guid: 85983fb089bf08947a4ea3ab6159b922, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

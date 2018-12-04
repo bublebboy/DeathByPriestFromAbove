@@ -28,4 +28,19 @@ public class SwordController : MonoBehaviour
         transform.localRotation = rotation;
         a += Time.fixedDeltaTime;
     }
+
+    private IEnumerator Kill(GameObject obj)
+    {
+        obj.GetComponent<Collider2D>().enabled = false;
+        obj.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
+        yield return null;
+        obj.GetComponent<Animator>().SetTrigger("Die");
+        yield return new WaitForSeconds(0.75f);
+        Destroy(obj.gameObject);
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        StartCoroutine(Kill(collision.gameObject));
+    }
 }

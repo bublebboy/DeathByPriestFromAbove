@@ -108,6 +108,10 @@ public class CharacterController : MonoBehaviour
 
     private void OnCollisionStay2D(Collision2D collision)
     {
+        if (collision.gameObject.tag != "ground")
+        {
+            return;
+        }
         grounded = false;
         Vector3 gravDir = Physics2D.gravity.normalized;
         Vector2 bestGroundNormal = Vector2.zero;
